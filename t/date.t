@@ -2,7 +2,7 @@
 use strict;
 use Test;
 
-BEGIN { plan tests => 157 }
+BEGIN { plan tests => 158 }
 
 use Date::Simple;
 
@@ -151,3 +151,5 @@ foreach (
 						  (@$_[0,1,2]))));
     }
 }
+
+ok (Date::Simple::today());

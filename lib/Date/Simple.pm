@@ -2,7 +2,7 @@
 
 package Date::Simple;
 
-$VERSION = '2.00';
+$VERSION = '2.01';
 use Exporter ();
 @ISA = ('Exporter');
 @EXPORT_OK = ('today', 'ymd', 'd8', 'date', 'leap_year', 'days_in_month');
@@ -38,7 +38,7 @@ sub today {
     my ($y, $m, $d) = (localtime) [5, 4, 3];
     $y += 1900;
     $m += 1;
-    return from_ymd (__PACKAGE__, $y, $m, $d);
+    return ymd ($y, $m, $d);
 }
 
 sub _inval {
