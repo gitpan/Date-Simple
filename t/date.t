@@ -2,7 +2,7 @@
 use strict;
 use Test;
 
-BEGIN { plan tests => 158 }
+BEGIN { plan tests => 159 }
 
 use Date::Simple;
 
@@ -153,3 +153,4 @@ foreach (
 }
 
 ok (Date::Simple::today());
+ok (Date::Simple::days_in_month(2001,10), 31);

@@ -2,7 +2,7 @@
 
 package Date::Simple;
 
-$VERSION = '2.01';
+$VERSION = '2.02';
 use Exporter ();
 @ISA = ('Exporter');
 @EXPORT_OK = ('today', 'ymd', 'd8', 'date', 'leap_year', 'days_in_month');
@@ -145,6 +145,33 @@ Date::Simple - a simple date object
     ($date cmp "2001-07-01")
     # and this
     ($date <=> [2001, 7, 1])
+
+=begin text
+
+INSTALLATION
+
+ If your system has the "make" program or a clone:
+
+     perl Makefile.PL
+     make
+     make test
+     make install
+
+ If you lack "make", copy the "lib/Date" directory to your module
+ directory (run "perl -V:sitelib" to find it).
+
+ If "make test" fails, perhaps it means your system can't compile C
+ code.  Try:
+
+     make distclean
+     perl Makefile.PL noxs
+     make
+     make test
+     make install
+
+ This will use the pure-Perl implementation.
+
+=end text
 
 =head1 DESCRIPTION
 

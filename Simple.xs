@@ -212,7 +212,10 @@ days_in_month(y, m)
 	IV m
 	CODE:
 	{
-		RETVAL = days_in_month (y, m);
+		if (m < 1 || m > 12)
+			croak ("days_in_month: month out of range (%d)",
+			       (int) m);
+		RETVAL = days_in_month (m, y);
 	}
 	OUTPUT:
 	RETVAL
@@ -230,7 +233,7 @@ validate(ysv, m, d)
 			RETVAL = 0;
 		else if (m < 1 || m > 12)
 			RETVAL = 0;
-		else if (d < 1 || d > days_in_month (y, m))
+		else if (d < 1 || d > days_in_month (m, y))
 			RETVAL = 0;
 		else
 			RETVAL = 1;
