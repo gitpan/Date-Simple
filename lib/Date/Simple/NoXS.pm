@@ -131,6 +131,7 @@ sub days_to_ymd {
 
 sub as_ymd { return days_to_ymd (${$_[0]}); }
 sub as_d8  { return sprintf ("%04d%02d%02d", &as_ymd); }
+sub as_iso { return sprintf ("%04d-%02d-%02d", &as_ymd); }
 
 sub year  { return (&as_ymd) [0]; }
 sub month { return (&as_ymd) [1]; }
@@ -144,7 +145,6 @@ sub day_of_week {
 # the following methods are called by the overloaded operators, so they should
 # not normally be called directly.
 #------------------------------------------------------------------------------
-sub _stringify { return sprintf ("%04d-%02d-%02d", &as_ymd); }
 
 sub _add {
     my ($date, $diff) = @_;

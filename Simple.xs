@@ -197,8 +197,6 @@ new_for_cmp (SV* left, SV* right, int croak_on_fail)
 	return ret;
 }
 
-
-
 MODULE = Date::Simple	PACKAGE = Date::Simple
 
 SV*
@@ -361,8 +359,10 @@ day(date)
 	OUTPUT:
 	RETVAL
 
+
+
 SV*
-_stringify(date, ...)
+as_iso(date, ...)
 	SV* date
 	CODE:
 	{
@@ -377,8 +377,9 @@ _stringify(date, ...)
 	OUTPUT:
 	RETVAL
 
+
 SV*
-as_d8(date)
+as_d8(date, ...)
 	SV* date
 	CODE:
 	{

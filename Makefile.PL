@@ -23,7 +23,10 @@ else {
 WriteMakefile(
     'NAME'		=> 'Date::Simple',
     'VERSION_FROM'	=> 'lib/Date/Simple.pm',
-    'PREREQ_PM'		=> {},
+    'PREREQ_PM'		=> {
+                            'Test::More'   => undef,
+                            'Scalar::Util' => undef,
+                           },
     @noxs,
 );
 
@@ -32,8 +35,10 @@ package MY;
 sub constants {
     my ($self) = @_;
     my $ret = $self->SUPER::constants;
-    $ret =~ s/Simple.(pm|pod)/SimpleFoo.$1/g;
-    $ret =~ s/Simple\.\S+//gs;
-    $ret =~ s/SimpleFoo/Simple/g;
+    unless ($::xs) {
+    	$ret =~ s/Simple.(pm|pod)/SimpleFoo.$1/g;
+    	$ret =~ s/Simple\.\S+//gs;
+    	$ret =~ s/SimpleFoo/Simple/g;
+    }
     return $ret;
 }
