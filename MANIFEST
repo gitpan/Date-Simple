@@ -1,5 +1,10 @@
-Simple.pm
 MANIFEST
+MANIFEST.SKIP
 Makefile.PL
-test.pl
+t/date.t
+lib/Date/Simple.pm
+lib/Date/Simple/NoXS.pm
 README
+COPYING
+Simple.xs
+ChangeLog

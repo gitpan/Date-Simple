@@ -1,0 +1,15 @@
+2001-08-27  John Tobey  <jtobey@john-edwin-tobey.org>
+
+	* Version 2.00.
+
+	* Added functional interface (date, d8, ymd).
+
+	* Load POSIX module only when needed.
+
+	* Crunch numbers in C if compiler found.  (Install with 'perl
+	Makefile.PL noxs' to select the pure Perl implementation.)
+
+	* Can calculate the day of the week.
+
+	* Reduced dependence on time_t, most functions work for dates up
+	to 9999.
