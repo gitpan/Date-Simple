@@ -1,7 +1,15 @@
 package Date::Simple::ISO;
 use Date::Simple 3;
 use base qw/Date::Simple/;
-use overload '""' => sub { $_[0]->as_iso };
+use overload '""' => 'as_iso'; #sub { $_[0]->as_iso };
+
+*EXPORT      = *Date::Simple::EXPORT;
+*EXPORT_OK   = *Date::Simple::EXPORT_OK;
+*EXPORT_TAGS = *Date::Simple::EXPORT_TAGS;
+
+sub d8    { __PACKAGE__->_d8(@_)    }
+sub today { __PACKAGE__->_today(@_) }
+sub ymd   { __PACKAGE__->_ymd(@_)   }
 
 1;
 

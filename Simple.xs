@@ -157,10 +157,18 @@ d8_to_days (SV* d8, IV* days)
 }
 
 static SV*
-days_to_date (IV days, const char* pkg)
+days_to_date (IV days, SV* pkg)
 {
-	return sv_bless (newRV_noinc (newSViv (days)),
-			 gv_stashpv (pkg == 0 ? "Date::Simple" : pkg, 1));
+        char* pack=0;
+        if (SvROK (pkg)) {
+            HV* stash;
+            stash=SvSTASH(SvRV(pkg));
+       	    return sv_bless( newRV_noinc (newSViv (days)), stash );
+        } else if (SvTRUE(pkg)) {
+            pack=SvPV_nolen(pkg);
+        }
+        return sv_bless( newRV_noinc (newSViv (days)),
+			 gv_stashpv (pack == 0 ? "Date::Simple" : pack, 1));
 }
 
 static int
@@ -200,7 +208,8 @@ new_for_cmp (SV* left, SV* right, int croak_on_fail)
 MODULE = Date::Simple	PACKAGE = Date::Simple
 
 SV*
-ymd(y, m, d)
+_ymd(obj_or_class, y, m, d)
+	SV* obj_or_class
 	IV y
 	IV m
 	IV d
@@ -208,7 +217,7 @@ ymd(y, m, d)
 	{
 		IV days;
 		if (ymd_to_days (y, m, d, &days))
-			RETVAL = days_to_date (days, 0);
+			RETVAL = days_to_date (days, obj_or_class);
 		else
 			XSRETURN_UNDEF;
 	}
@@ -216,13 +225,14 @@ ymd(y, m, d)
 	RETVAL
 
 SV*
-d8(d8)
+_d8(obj_or_class, d8)
+	SV* obj_or_class
 	SV* d8
 	CODE:
 	{
 		IV days;
 		if (d8_to_days (d8, &days))
-			RETVAL = days_to_date (days, 0);
+			RETVAL = days_to_date (days, obj_or_class);
 		else
 			XSRETURN_UNDEF;
 	}

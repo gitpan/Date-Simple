@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
-use Test::More tests=>184;
+use Test::More tests=>196;
 
 use Date::Simple;
 
@@ -175,6 +175,11 @@ my $d8  = Date::Simple::D8->new  ('1972-04-28');
 my $iso = Date::Simple::ISO->new ('1972-04-28');
 my $fmt = Date::Simple::Fmt->new ('%d-%m-%Y','1972-04-28');
 
+isa_ok($d,'Date::Simple');
+isa_ok($d8,'Date::Simple::D8');
+isa_ok($iso,'Date::Simple::ISO');
+isa_ok($fmt,'Date::Simple::Fmt');
+
 is ("$d",   '1972-04-28','Normal overloaded stringify');
 is ("$d8",  '19720428'  ,'D8 overloaded stringify');
 is ("$iso", '1972-04-28','ISO overloaded stringify');
@@ -199,4 +204,24 @@ is ($d->as_str('<%Y><%m><%d>'),   '<1972><04><28>','Normal as_str(FMT)');
 is ($d8->as_str('<%Y><%m><%d>'),  '<1972><04><28>','D8 as_str(FMT)');
 is ($iso->as_str('<%Y><%m><%d>'), '<1972><04><28>','ISO as_str(FMT)');
 is ($fmt->as_str('<%Y><%m><%d>'), '<1972><04><28>','Fmt as_str(FMT)');
+
+$d   = Date::Simple->new();
+$d8  = Date::Simple::D8->new();
+$iso = Date::Simple::ISO->new();
+$fmt = Date::Simple::Fmt->new('%d-%m-%Y');
+
+isa_ok($d,'Date::Simple');
+isa_ok($d8,'Date::Simple::D8');
+isa_ok($fmt,'Date::Simple::Fmt');
+isa_ok($iso,'Date::Simple::ISO');
+
+my ($Y, $M, $D) = (localtime) [5, 4, 3];
+$Y += 1900;
+$M += 1;
+$_=sprintf "%02d",$_ for $M,$D;
+
+is ("$d",   "$Y-$M-$D",'Normal overloaded stringify');
+is ("$d8",  "$Y$M$D"  ,'D8 overloaded stringify');
+is ("$iso", "$Y-$M-$D",'ISO overloaded stringify');
+is ("$fmt", "$D-$M-$Y",'Fmt overloaded stringify');
 

@@ -4,16 +4,18 @@ use strict;
 
 package Date::Simple;
 
-sub ymd {
-    my $days = &ymd_to_days;
+sub _ymd {
+    my ($o,@args)=@_;
+    my $c=ref($o)||$o;
+    my $days = ymd_to_days(@args);
     return undef unless defined ($days);
-    return (bless (\$days, __PACKAGE__));
+    return (bless (\$days, $c));
 }
 
-sub d8 {
-    my ($d8) = @_;
+sub _d8 {
+    my ($o,$d8) = @_;
     my @ymd = $d8 =~ m/^(\d{4})(\d\d)(\d\d)$/ or return undef;
-    return ymd (@ymd);
+    return $o->_ymd(@ymd);
 }
 
 # Precise integer arithmetic functions unfortunately missing from

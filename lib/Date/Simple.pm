@@ -2,21 +2,20 @@
 
 package Date::Simple;
 BEGIN {
-   $VERSION = '3.00';
+   $VERSION = '3.01';
 }
 use Exporter ();
 @ISA = ('Exporter');
 @EXPORT_OK = qw(
                  today ymd d8 leap_year days_in_month
                  date date_fmt date_d8 date_iso
-                 $Standard_Format
                );
 %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
 # Try to load the C code.  If that fails, fall back to Date::Simple::NoXS.
 if (! defined (&_add)) {
-    my ($err);
-    {
+    my $err=$Date::Simple::NoXS;
+    unless ($err) {
 	# Use DynaLoader instead of XSLoader for pre-5.005.
 	local ($@);
 	local @ISA = ('DynaLoader');
@@ -25,6 +24,7 @@ if (! defined (&_add)) {
 	$err = $@;
     }
     if ($err) {
+        $Date::Simple::NoXs=1;
 	require Date::Simple::NoXS;
     }
 }
@@ -49,11 +49,15 @@ require Date::Simple::Fmt;
 require Date::Simple::ISO;
 require Date::Simple::D8;
 
-sub today {
+sub d8    { __PACKAGE__->_d8(@_)    }
+sub today { __PACKAGE__->_today(@_) }
+sub ymd   { __PACKAGE__->_ymd(@_)   }
+
+sub _today {
     my ($y, $m, $d) = (localtime) [5, 4, 3];
     $y += 1900;
     $m += 1;
-    return ymd ($y, $m, $d);
+    return $_[0]->_ymd ($y, $m, $d);
 }
 
 sub _inval {
@@ -87,7 +91,7 @@ sub _new {
     }  # we fall through here...
 
     # note we can end up here is they pass in [] as the date
-    return today() unless @ymd;
+    return $class->_today() unless @ymd;
 
     # to get here, we had one arg which was split,
     # or 3 in the first place
