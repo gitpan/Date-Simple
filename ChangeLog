@@ -1,3 +1,7 @@
+2004-12-18  Yves Orton <demerphq@hotmail.com>
+
+        * YO --  Version number kick to 3.02, doc fix. Patch merge.
+
 2004-11-27  John Tobey  <jtobey@john-edwin-tobey.org>
 
 	* Simple.xs (is_leap_year): Fixed math for dates before
@@ -5,10 +9,16 @@
 
 	* t/date.t: Added day_of_week tests.
 
-2003-08-29  John Tobey  <jtobey@john-edwin-tobey.org>
 
-	* Makefile.PL (constants): Don't munge the constants section if
-	using XS.  Thanks to Yves Orton.  (How did it ever work before??)
+2004-04-02  Yves Orton <demerphq@hotmail.com>
+
+	* lib/Date/Simple.pm ($VERSION): Version 3.
+	  Added formatting support and as_iso() XS method.
+	  Switched to using Test::More instead of Test.
+	  Prereqs expanded to include Test::More and Scalar::Util
+	  Both are standard distro in later perls.
+
+	* Makefile.pl: Dont mess with filenames xs is true.
 
 2002-12-06  John Tobey  <jtobey@john-edwin-tobey.org>
 
