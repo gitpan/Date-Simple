@@ -1,9 +1,7 @@
 package Date::Simple;
 
-require v5.6;
 use strict;
-use warnings;
-our $VERSION = '1.01';
+$Date::Simple::VERSION = '1.02';
 
 use Carp;
 use overload
@@ -27,7 +25,7 @@ sub new {
         my ($y,$m,$d);
         if (@_ == 1) {
             ($y,$m,$d) = $_[0] =~ /^(\d{4})-(\d{2})-(\d{2})$/
-                or croak "'$_[0]' is not a valid Simple date";
+                or croak "'$_[0]' is not a valid date";
         } elsif (@_ == 3) {
             ($y,$m,$d) = @_;
         } else {
@@ -156,9 +154,9 @@ Date::Simple - a simple date object
 
 =head1 DESCRIPTION
 
-This module may be used to create ISO 8601 simple date objects.  It only handles
-dates within the range of Unix time.  It will only allow the creation of objects
-for valid dates.  Attempting to create an invalid date will return undef.
+This module may be used to create simple date objects.  It only handles dates
+within the range of Unix time.  It will only allow the creation of objects for
+valid dates.  Attempting to create an invalid date will return undef.
 
 =cut
 
@@ -207,15 +205,14 @@ Return the day of the date held in this date object
 =head2 format
 
 Returns a string representing the date, in the format specified.
-If you don't pass a parameter, an Simple 8601 formatted date is returned.
+If you don't pass a parameter, an ISO 8601 formatted date is returned.
 
     my $change_date = $date->format("%d %b %y");
     my $iso_date1 = $date->format("%Y-%m-%d");
     my $iso_date2 = $date->format;
 
-The formatting parameter is uncannily similar to one you would pass to
-strftime(3).  This is probably because we actually do pass it to strftime to
-format the date.
+The formatting parameter is similar to one you would pass to strftime(3).
+This is because we actually do pass it to strftime to format the date.
 
 =head1 OPERATORS
 
