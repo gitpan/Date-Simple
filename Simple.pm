@@ -1,7 +1,7 @@
 package Date::Simple;
 
 use strict;
-$Date::Simple::VERSION = '1.02';
+$Date::Simple::VERSION = '1.03';
 
 use Carp;
 use overload
@@ -16,32 +16,31 @@ use overload
 use POSIX qw(strftime mktime);
 
 sub new {
-    my $that = shift;
+    my ($that, @ymd) = @_;
     my $class = ref($that) || $that;
-    my $self;
-    if (@_ == 0) {
-        $self = \time;
-    } else {
-        my ($y,$m,$d);
-        if (@_ == 1) {
-            ($y,$m,$d) = $_[0] =~ /^(\d{4})-(\d{2})-(\d{2})$/
-                or croak "'$_[0]' is not a valid date";
-        } elsif (@_ == 3) {
-            ($y,$m,$d) = @_;
+    if (@ymd == 1) {
+        my $x = $ymd[0];
+        if(ref $x eq 'ARRAY') {
+            @ymd = @$x;
         } else {
-            croak "please read the documentation";
+            @ymd = $ymd[0] =~ /^(\d{4})-(\d{2})-(\d{2})$/
+                or croak "'$_[0]' is not a valid ISO formated date";
         }
-        return undef unless validate($y, $m, $d);
-        $y -= 1900;
-        $m -= 1;
-        $self = \mktime 0, 0, 12, $d, $m, $y;
     }
-    bless $self, $class;
-    return $self;
+    my $time;
+    if (@ymd == 3) {
+        return undef unless validate(@ymd);
+        $time = _mkdateymd(@ymd);
+    } elsif (@ymd == 0) {
+        $time = time;
+    } else {
+        croak "please read the documentation";
+    }
+    return bless \$time, $class;
 }
 
 sub next { return $_[0] + 1 }
-sub prev { return $_[0] + 1 }
+sub prev { return $_[0] - 1 }
 
 # return a copy of self
 sub _copy {
@@ -61,18 +60,25 @@ my @days_in_month = (
  [0,31,29,31,30,31,30,31,31,30,31,30,31],
 );
 
-sub days_in_month {
+sub days_in_month ($$) {
     my ($y,$m) = @_;
     return $days_in_month[leap_year($y)][$m];
 }
 
-sub validate {
+sub validate ($$$) {
     my ($y, $m, $d)= @_;
     # any +ve integral year is valid
     return 0 if $y != abs int $y;
     return 0 unless 1 <= $m and $m <= 12;
     return 0 unless 1 <= $d and $d <= $days_in_month[leap_year($y)][$m];
     return 1;
+}
+
+sub _mkdateymd ($$$) {
+    my ($y, $m, $d) = @_;
+    $y -= 1900;
+    $m -= 1;
+    return mktime 0, 0, 12, $d, $m, $y;
 }
     
 sub year  { return (localtime ${$_[0]})[5] + 1900 }
@@ -98,13 +104,13 @@ sub _increment {
 }
 
 sub _decrement {
-    my ($self, $n) = @_;
+    my ($self, $n, $reverse) = @_;
     $$self -= $n*86400;
     return $self;
 }
 
 sub _add {
-    my ($self, $n, $reverse) = @_;
+    my ($self, $n) = @_;
     my $copy = $self->_copy;
     $copy += $n;
     return $copy;
@@ -112,18 +118,25 @@ sub _add {
 
 sub _subtract {
     my ($self, $n, $reverse) = @_;
-    if (ref $n and $n->isa('Date::Simple')) {
+    if (UNIVERSAL::isa($n, 'Date::Simple')) {
         my $diff = $$self - $$n;
         $diff /= 86400;
+        # $reverse should probably always be false here, but...
         return $reverse ? -$diff : $diff;
     } else {
+        # we don't know how to subtract a date from a non-date
         my $copy = $self->_copy;
         $copy -= $n;
         return $copy;
     }
 }
 
-sub _compare { return int(${$_[0]}/86400) <=> int(${$_[1]}/86400) }
+sub _compare {
+    my ($self, $x, $reverse) = @_;
+    $x = Date::Simple->new($x) unless UNIVERSAL::isa($x, 'Date::Simple');
+    my $c = (int(${$self}/86400) <=> int(${$x}/86400));
+    return $reverse ? -$c : $c;
+}
 
 1;
 
@@ -151,6 +164,11 @@ Date::Simple - a simple date object
     if ($today > $tomorrow) {
         die "warp in space-time continuum";
     }
+
+    # you can also do this:
+    ($date cmp "2001-07-01")
+    # and this
+    ($date <=> [2001, 7, 1])
 
 =head1 DESCRIPTION
 

@@ -1,3 +1,7 @@
+CHANGES
+
+1.03: Fixed bug where 'prev' did the same as 'next': D'Oh!
+
 NAME
 
     Date::Simple - a simple date object
