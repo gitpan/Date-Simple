@@ -1,21 +1,17 @@
 # Date::Simple - a simple date object
 
 package Date::Simple;
-BEGIN {
-   $VERSION = '3.01';
-}
+
+$VERSION = '2.05';
 use Exporter ();
 @ISA = ('Exporter');
-@EXPORT_OK = qw(
-                 today ymd d8 leap_year days_in_month
-                 date date_fmt date_d8 date_iso
-               );
+@EXPORT_OK = ('today', 'ymd', 'd8', 'date', 'leap_year', 'days_in_month');
 %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
 # Try to load the C code.  If that fails, fall back to Date::Simple::NoXS.
 if (! defined (&_add)) {
-    my $err=$Date::Simple::NoXS;
-    unless ($err) {
+    my ($err);
+    {
 	# Use DynaLoader instead of XSLoader for pre-5.005.
 	local ($@);
 	local @ISA = ('DynaLoader');
@@ -24,7 +20,6 @@ if (! defined (&_add)) {
 	$err = $@;
     }
     if ($err) {
-        $Date::Simple::NoXs=1;
 	require Date::Simple::NoXS;
     }
 }
@@ -41,23 +36,13 @@ use overload
     'ne'  => '_ne',
     'cmp' => '_compare',
     'bool' => sub { 1 },
-    '""'  => 'as_iso';
+    '""'  => '_stringify';
 
-use Scalar::Util qw(refaddr reftype);
-use warnings::register;
-require Date::Simple::Fmt;
-require Date::Simple::ISO;
-require Date::Simple::D8;
-
-sub d8    { __PACKAGE__->_d8(@_)    }
-sub today { __PACKAGE__->_today(@_) }
-sub ymd   { __PACKAGE__->_ymd(@_)   }
-
-sub _today {
+sub today {
     my ($y, $m, $d) = (localtime) [5, 4, 3];
     $y += 1900;
     $m += 1;
-    return $_[0]->_ymd ($y, $m, $d);
+    return ymd ($y, $m, $d);
 }
 
 sub _inval {
@@ -69,15 +54,16 @@ sub _inval {
 
 sub _new {
     my ($that, @ymd) = @_;
+    my ($class);
 
-    my $class = ref ($that) || $that;
+    $class = ref ($that) || $that;
 
-    if ( @ymd == 1 ) {
+    if (scalar (@ymd) == 1) {
 	my $x = $ymd[0];
-	if (ref $x and reftype($x) eq 'ARRAY') {
+	if (ref ($x) eq 'ARRAY') {
 	    @ymd = @$x;
 	}
-	elsif (UNIVERSAL::isa ($x, __PACKAGE__)) {
+	elsif (UNIVERSAL::isa ($x, $class)) {
 	    return ($x);
 	}
 	elsif ($x =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
@@ -88,39 +74,26 @@ sub _new {
 	else {
 	    return (undef);
 	}
-    }  # we fall through here...
-
-    # note we can end up here is they pass in [] as the date
-    return $class->_today() unless @ymd;
-
-    # to get here, we had one arg which was split,
-    # or 3 in the first place
-    if ( @ymd == 3 ) {
+    }
+    if (scalar (@ymd) == 0) {
+	return (today());
+    }
+    if (scalar (@ymd) == 3) {
 	my $days = ymd_to_days (@ymd);
 	return undef if ! defined ($days);
 	return (bless (\$days, $class));
     }
-
-    $class->_inval(@ymd);
+    _inval ($class, @ymd);
 }
 
-sub date { scalar __PACKAGE__->_new( @_ ) }
-
-sub date_fmt {
-    my $format=shift;
-    my $obj=Date::Simple::Fmt->_new(@_);
-    $obj->default_format($format)
-        if $obj;
-    $obj;
+sub date {
+    return (scalar (_new (__PACKAGE__, @_)));
 }
-
-sub date_d8  { scalar Date::Simple::D8->_new(@_)  }
-sub date_iso { scalar Date::Simple::ISO->_new(@_) }
 
 # Same as date() but it's a method and croaks on error if called with
 # one arg.
 sub new {
-    my ($class,$date);
+    my ($date);
 
     $date = &_new;
     if (! $date && scalar (@_) == 1) {
@@ -139,55 +112,17 @@ sub _gmtime {
     return (0, 0, 0, $d, $m, $y);
 }
 
-
-BEGIN {
-    our $Standard_Format="%Y-%m-%d";
-    my %fmts=( # Inside out parameter
-              'Date::Simple'      => $Standard_Format,
-              'Date::Simple::ISO' => $Standard_Format,
-              'Date::Simple::D8'  => "%Y%m%d",
-              'Date::Simple::Fmt' => $Standard_Format,
-             );
-
-    sub format {
-        my ($self,$format)=@_;
-
-        $format= $fmts{refaddr($self)||''} || $fmts{ref($self)} || $Standard_Format
-            if @_==1;
-
-        return "$self" unless defined ($format);
-        require POSIX;
-        local $ENV{TZ} = 'UTC+0';
-        return POSIX::strftime ($format, _gmtime ($self));
-    }
-
-    sub strftime { &format }
-    sub as_str   { &format }
-
-
-    sub default_format {
-        my ($self,$val)=@_;
-
-        my $o=refaddr($self) || $self;
-
-        if (@_>1) {
-            $fmts{$o}=$val;
-            warnings::warnif "Setting class specific date format '$o' to".
-            "'" .(defined $val ? $val : 'undef')."'"
-                unless ref $self;
-        }
-
-        return $fmts{$o}||$Standard_Format;
-    }
-
-    sub DESTROY {
-        delete $fmts{refaddr $_[0]};
-    }
+sub format {
+    my ($self, $format) = @_;
+    return "$self" unless defined ($format);
+    require POSIX;
+    local $ENV{TZ} = 'UTC+0';
+    return POSIX::strftime ($format, _gmtime ($self));
 }
 
+sub strftime { &format }
+
 1;
-
-
 
 =head1 NAME
 
@@ -280,10 +215,6 @@ after today?
 
 What day of the week is a given date?
 
-=item Transparent date formatting.
-
-How should a date object be formatted.
-
 =back
 
 It does B<not> deal with hours, minutes, seconds, and time zones.
@@ -313,46 +244,7 @@ available on all platforms and are likely to change or disappear in
 future releases.  Please let the author know if you think any of them
 should be public.
 
-=head2 Controlling output format.
-
-As of version 3.0 new ways of controlling the output formats of Date::Simple
-objects has been provided. However Date::Simple has traditionally provided
-few ways of stringification, a primary one via the format() method and another
-primary one via direct stringification. However the later is currently
-implemented as an XS routine and the former is implemented through a perl routine.
-This means that using format() is more expensive than stringification and
-that the stringification format is class specific.
-
-In order to alleviate some of these problems a new mechanism has been introduced
-to Date::Simple that allows for a per object level format default. In addition
-a set of utility classes that have different stringification overloads provided.
-These classes are simple subclasses of Date::Simple and beside the default format()
-and the overloaded stringification behaviour are identical to Date::Simple. In fact
-one is totally identical to Date::Simple and is provided mostly for completeness.
-
-The classes included are:
-
-=over 4
-
-=item Date::Simple::ISO
-
-Identical to Date::Simple in every respect but name.
-
-=item Date::Simple::D8
-
-Uses the D8 format (%Y%m%d) as the default format for printing. Uses XS for the
-overloaded stringification.
-
-=item Date::Simple::Fmt
-
-Uses the perl implemented format() as the default stringification mechanism. The first
-argument to the constructor is expected to be the format to use for the object.
-
-=back
-
-B<NOTE> its important to remember that the primary difference between the behaviour
-of objects of the different classes is how they are stringified when quoted, and what
-date format is used by default when the format() method is called. Nothing else differs.
+=cut
 
 =head1 CONSTRUCTORS
 
@@ -380,19 +272,6 @@ imported or qualified as C<Date::Simple::date>.  (To import all public
 functions, do C<use Date::Simple (':all');>.)  This function returns
 undef on all invalid input, rather than dying in some cases like
 C<new>.
-
-=item date_fmt (FMT,[ARG, ...])
-
-Equivelent to C<date> but creates a Date::Simple::Fmt object instead. The
-format is expected to be a valid POSIX::strftime format string.
-
-=item date_iso ([ARG, ...])
-
-Identical to C<date> but creates a Date::Simple::ISO object instead.
-
-=item date_D8 ([ARG, ...])
-
-Equivelent to C<date> but creates a Date::Simple::D8 object instead.
 
 =item today()
 
@@ -439,7 +318,7 @@ Returns an object representing tomorrow.
 
 =item DATE->prev
 
-   my $yesterday = $today->prev;
+    my $yesterday = $today->prev;
 
 Returns an object representing yesterday.
 
@@ -477,26 +356,13 @@ Returns a list of three numbers: year, month, and day.
 Returns the "d8" representation (see C<d8>), like
 C<$date-E<gt>format("%Y%m%d")>.
 
-=item DATE->as_iso
+=item DATE->format (STRING)
 
-Returns the ISO 8601 representation of the date (eg '2004-01-01'),
-like C<$date-E<gt>format("%Y-%m-%d")>. This is in fact the default
-overloaded stringification mechanism and is provided mostly so
-other subclasses with different overloading can still do fast
-ISO style date output.
-
-=item DATE->as_str ([STRING])
-
-=item DATE->format ([STRING])
-
-=item DATE->strftime ([STRING])
+=item DATE->strftime (STRING)
 
 These functions are equivalent.  Return a string representing the
-date, in the format specified.  If you don't pass a parameter, the default
-date format for the object is used if one has been specified, otherwise
-uses the default date format for the class the object is a member of, or as
-a last fallback uses the $Date::Simple::Standard_Format which is changeable,
-but probably shouldn't be modified. See C<default_format> for details.
+date, in the format specified.  If you don't pass a parameter, an ISO
+8601 formatted date is returned.
 
     my $change_date = $date->format("%d %b %y");
     my $iso_date1 = $date->format("%Y-%m-%d");
@@ -506,11 +372,6 @@ The formatting parameter is similar to one you would pass to
 strftime(3).  This is because we actually do pass it to strftime to
 format the date.  This may result in differing behavior across
 platforms and locales and may not even work everywhere.
-
-=item DATE->default_format ([FORMAT])
-
-This method sets or gets the default_format for the DATE object or class
-that it is called on.
 
 =back
 
@@ -562,10 +423,7 @@ equivalent to C<$date = $date + $number>.
 =item "$date"
 
 You can interpolate a date instance directly into a string, in the
-format specified by ISO 8601 (eg: 2000-01-17) for Date::Simple and
-Date::Simple::ISO, for Date::Simple::D8 this is the same as calling
-as_d8() on the object, and for Date::Simple::Fmt this is the same as
-calling format() on the object.
+format specified by ISO 8601 (eg: 2000-01-17).
 
 =back
 
@@ -583,30 +441,15 @@ Returns the number of days in MONTH, YEAR.
 
 =back
 
-=over 4
-
-=item leap_year (YEAR)
-
-Returns true if YEAR is a leap year.
-
-=item days_in_month (YEAR, MONTH)
-
-Returns the number of days in MONTH, YEAR.
-
-=back
-
-
 =head1 AUTHOR
 
     Marty Pauley <marty@kasei.com>
     John Tobey <jtobey@john-edwin-tobey.org>
-    Yves Orton <demerphq@hotmail.com>
 
 =head1 COPYRIGHT
 
-      Copyright (C) 2001  Kasei.
+      Copyright (C) 2001  Kasei
       Copyright (C) 2001,2002 John Tobey.
-      Copyright (C) 2004 Yves Orton.
 
       This program is free software; you can redistribute it and/or
       modify it under the terms of either:
@@ -623,10 +466,5 @@ Returns the number of days in MONTH, YEAR.
       This program is distributed in the hope that it will be useful,
       but WITHOUT ANY WARRANTY; without even the implied warranty of
       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-=head1 SEE ALSO
-
-L<Date::Simple::Fmt> L<Date::Simple::ISO> L<Date::Simple::D8>
-and of course L<perl>
 
 =cut

@@ -4,18 +4,16 @@ use strict;
 
 package Date::Simple;
 
-sub _ymd {
-    my ($o,@args)=@_;
-    my $c=ref($o)||$o;
-    my $days = ymd_to_days(@args);
+sub ymd {
+    my $days = &ymd_to_days;
     return undef unless defined ($days);
-    return (bless (\$days, $c));
+    return (bless (\$days, __PACKAGE__));
 }
 
-sub _d8 {
-    my ($o,$d8) = @_;
+sub d8 {
+    my ($d8) = @_;
     my @ymd = $d8 =~ m/^(\d{4})(\d\d)(\d\d)$/ or return undef;
-    return $o->_ymd(@ymd);
+    return ymd (@ymd);
 }
 
 # Precise integer arithmetic functions unfortunately missing from
@@ -133,7 +131,6 @@ sub days_to_ymd {
 
 sub as_ymd { return days_to_ymd (${$_[0]}); }
 sub as_d8  { return sprintf ("%04d%02d%02d", &as_ymd); }
-sub as_iso { return sprintf ("%04d-%02d-%02d", &as_ymd); }
 
 sub year  { return (&as_ymd) [0]; }
 sub month { return (&as_ymd) [1]; }
@@ -147,6 +144,7 @@ sub day_of_week {
 # the following methods are called by the overloaded operators, so they should
 # not normally be called directly.
 #------------------------------------------------------------------------------
+sub _stringify { return sprintf ("%04d-%02d-%02d", &as_ymd); }
 
 sub _add {
     my ($date, $diff) = @_;

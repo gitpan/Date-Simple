@@ -47,11 +47,11 @@ ymd_to_days (IV y, IV m, IV d, IV* days)
 	if (x >= 1900)
 		leap_holes_100 = (x - 1900) / 100;
 	else
-		leap_holes_100 = - (1900 - x) / 100;
+		leap_holes_100 = - (1999 - x) / 100;
 	if (x >= 1600)
 		leap_days_400 = (x - 1600) / 400;
 	else
-		leap_days_400 = - (1600 - x) / 400;
+		leap_days_400 = - (1999 - x) / 400;
 
 	*days = nonleap_days + leap_days_4 - leap_holes_100 + leap_days_400;
 	return TRUE;
@@ -157,18 +157,10 @@ d8_to_days (SV* d8, IV* days)
 }
 
 static SV*
-days_to_date (IV days, SV* pkg)
+days_to_date (IV days, const char* pkg)
 {
-        char* pack=0;
-        if (SvROK (pkg)) {
-            HV* stash;
-            stash=SvSTASH(SvRV(pkg));
-       	    return sv_bless( newRV_noinc (newSViv (days)), stash );
-        } else if (SvTRUE(pkg)) {
-            pack=SvPV_nolen(pkg);
-        }
-        return sv_bless( newRV_noinc (newSViv (days)),
-			 gv_stashpv (pack == 0 ? "Date::Simple" : pack, 1));
+	return sv_bless (newRV_noinc (newSViv (days)),
+			 gv_stashpv (pkg == 0 ? "Date::Simple" : pkg, 1));
 }
 
 static int
@@ -205,11 +197,12 @@ new_for_cmp (SV* left, SV* right, int croak_on_fail)
 	return ret;
 }
 
+
+
 MODULE = Date::Simple	PACKAGE = Date::Simple
 
 SV*
-_ymd(obj_or_class, y, m, d)
-	SV* obj_or_class
+ymd(y, m, d)
 	IV y
 	IV m
 	IV d
@@ -217,7 +210,7 @@ _ymd(obj_or_class, y, m, d)
 	{
 		IV days;
 		if (ymd_to_days (y, m, d, &days))
-			RETVAL = days_to_date (days, obj_or_class);
+			RETVAL = days_to_date (days, 0);
 		else
 			XSRETURN_UNDEF;
 	}
@@ -225,14 +218,13 @@ _ymd(obj_or_class, y, m, d)
 	RETVAL
 
 SV*
-_d8(obj_or_class, d8)
-	SV* obj_or_class
+d8(d8)
 	SV* d8
 	CODE:
 	{
 		IV days;
 		if (d8_to_days (d8, &days))
-			RETVAL = days_to_date (days, obj_or_class);
+			RETVAL = days_to_date (days, 0);
 		else
 			XSRETURN_UNDEF;
 	}
@@ -369,10 +361,8 @@ day(date)
 	OUTPUT:
 	RETVAL
 
-
-
 SV*
-as_iso(date, ...)
+_stringify(date, ...)
 	SV* date
 	CODE:
 	{
@@ -387,9 +377,8 @@ as_iso(date, ...)
 	OUTPUT:
 	RETVAL
 
-
 SV*
-as_d8(date, ...)
+as_d8(date)
 	SV* date
 	CODE:
 	{
