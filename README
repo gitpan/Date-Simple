@@ -88,7 +88,7 @@ DESCRIPTION
     Gregorian dates up to year 9999 are handled correctly, but we rely on
     Perl's builtin "localtime" function when the current date is requested.
     On some platforms, "localtime" may be vulnerable to rollovers such as
-    the Unix "time_t" wraparound of January 2038.
+    the Unix "time_t" wraparound of 18 January 2038.
 
     Overloading is used so you can compare or subtract two dates using
     standard numeric operators such as "==", and the sum of a date object
@@ -105,20 +105,20 @@ DESCRIPTION
     should be public.
 
 CONSTRUCTORS
-    Several functions take a string or numeric representation and return a
+    Several functions take a string or numeric representation and generate a
     corresponding date object. The most general is "new", whose argument
-    list may be empty (returning the current date), a string in ISO 8601
-    format (YYYY-MM-DD), a list or arrayref of year, month, and day number,
-    or a date object.
+    list may be empty (returning the current date), a string in format
+    YYYY-MM-DD or YYYYMMDD, a list or arrayref of year, month, and day
+    number, or an existing date object.
 
     Date::Simple->new ([ARG, ...])
     date ([ARG, ...])
             my $date = Date::Simple->new('1972-01-17');
 
         The "new" method will return a date object if the values passed in
-        specify a valid date. If an invalid date is passed, the method
-        returns undef. If the argument is invalid in form as opposed to
-        numeric range, "new" dies.
+        specify a valid date. (See above.) If an invalid date is passed, the
+        method returns undef. If the argument is invalid in form as opposed
+        to numeric range, "new" dies.
 
         The "date" function provides the same functionality but must be
         imported or qualified as "Date::Simple::date". (To import all public
@@ -229,7 +229,11 @@ OPERATORS
     DATE1 cmp DATE2
     etc.
         You can compare two dates using the arithmetic or string comparison
-        operators.
+        operators. Equality tests ("==" and "eq") return false when one of
+        the expressions can not be converted to a date. Other comparison
+        tests die in such cases. This is intentional, because in a sense,
+        all non-dates are not "equal" to all dates, but in no sense are they
+        "greater" or "less" than dates.
 
     DATE += NUMBER
     DATE -= NUMBER
@@ -254,7 +258,7 @@ AUTHOR
 
 COPYRIGHT
           Copyright (C) 2001  Kasei
-          Copyright (C) 2001 John Tobey.
+          Copyright (C) 2001,2002 John Tobey.
 
           This program is free software; you can redistribute it and/or
           modify it under the terms of either:

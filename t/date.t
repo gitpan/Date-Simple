@@ -2,7 +2,7 @@
 use strict;
 use Test;
 
-BEGIN { plan tests => 159 }
+BEGIN { plan tests => 164 }
 
 use Date::Simple;
 
@@ -155,3 +155,9 @@ foreach (
 
 ok (Date::Simple::today());
 ok (Date::Simple::days_in_month(2001,10), 31);
+
+ok (d8 ('20021206') == 20021206);
+ok (d8 ('20021206') eq '20021206');
+ok (d8 ('20021206') eq '2002-12-06');
+ok (d8 ('20021206') ne 'bla');
+ok (d8 ('20021206') != 123);

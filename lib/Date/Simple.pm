@@ -2,7 +2,7 @@
 
 package Date::Simple;
 
-$VERSION = '2.03';
+$VERSION = '2.04';
 use Exporter ();
 @ISA = ('Exporter');
 @EXPORT_OK = ('today', 'ymd', 'd8', 'date', 'leap_year', 'days_in_month');
@@ -29,7 +29,11 @@ use Carp ();
 use overload
     '+'   => '_add',
     '-'   => '_subtract',
+    '=='  => '_eq',
+    '!='  => '_ne',
     '<=>' => '_compare',
+    'eq'  => '_eq',
+    'ne'  => '_ne',
     'cmp' => '_compare',
     'bool' => sub { 1 },
     '""'  => '_stringify';
@@ -42,31 +46,39 @@ sub today {
 }
 
 sub _inval {
-    Carp::croak ("Invalid ".(ref($_[0])||$_[0])." constructor args: ('"
-		 .join("', '", @_[1..$#_])."')");
+    my ($first);
+    $first = shift;
+    Carp::croak ("Invalid ".(ref($first)||$first)." constructor args: ('"
+		 .join("', '", @_)."')");
 }
 
-sub new {
+sub _new {
     my ($that, @ymd) = @_;
-    my $class = ref($that) || $that;
+    my ($class);
 
-    if (@ymd == 1) {
+    $class = ref ($that) || $that;
+
+    if (scalar (@ymd) == 1) {
 	my $x = $ymd[0];
-	if(ref $x eq 'ARRAY') {
+	if (ref ($x) eq 'ARRAY') {
 	    @ymd = @$x;
 	}
 	elsif (UNIVERSAL::isa ($x, $class)) {
 	    return ($x);
 	}
+	elsif ($x =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
+	       || $x =~ /^(\d\d\d\d)(\d\d)(\d\d)$/)
+	{
+	    @ymd = ($1, $2, $3);
+	}
 	else {
-	    @ymd = $x =~ /^(\d{4})-(\d{2})-(\d{2})$/
-		or Carp::croak ("'$x' is not a valid ISO formated date");
+	    return (undef);
 	}
     }
-    if (@ymd == 0) {
+    if (scalar (@ymd) == 0) {
 	return (today());
     }
-    if (@ymd == 3) {
+    if (scalar (@ymd) == 3) {
 	my $days = ymd_to_days (@ymd);
 	return undef if ! defined ($days);
 	return (bless (\$days, $class));
@@ -74,10 +86,20 @@ sub new {
     _inval ($class, @ymd);
 }
 
-# Call new, but return undef instead of raising an exception.
 sub date {
-    local ($@);
-    return (scalar eval {new (__PACKAGE__, @_)});
+    return (scalar (_new (__PACKAGE__, @_)));
+}
+
+# Same as date() but it's a method and croaks on error if called with
+# one arg.
+sub new {
+    my ($date);
+
+    $date = &_new;
+    if (! $date && scalar (@_) == 1) {
+	Carp::croak ("'" . shift() . "' is not a valid ISO formated date");
+    }
+    return ($date);
 }
 
 sub next { return ($_[0] + 1); }
@@ -206,7 +228,7 @@ Years are 4-digit.
 Gregorian dates up to year 9999 are handled correctly, but we rely on
 Perl's builtin C<localtime> function when the current date is
 requested.  On some platforms, C<localtime> may be vulnerable to
-rollovers such as the Unix C<time_t> wraparound of January 2038.
+rollovers such as the Unix C<time_t> wraparound of 18 January 2038.
 
 Overloading is used so you can compare or subtract two dates using
 standard numeric operators such as C<==>, and the sum of a date object
@@ -226,11 +248,11 @@ should be public.
 
 =head1 CONSTRUCTORS
 
-Several functions take a string or numeric representation and return a
-corresponding date object.  The most general is C<new>, whose argument
-list may be empty (returning the current date), a string in ISO 8601
-format (YYYY-MM-DD), a list or arrayref of year, month, and day
-number, or a date object.
+Several functions take a string or numeric representation and generate
+a corresponding date object.  The most general is C<new>, whose
+argument list may be empty (returning the current date), a string in
+format YYYY-MM-DD or YYYYMMDD, a list or arrayref of year, month, and
+day number, or an existing date object.
 
 =over 4
 
@@ -241,9 +263,9 @@ number, or a date object.
     my $date = Date::Simple->new('1972-01-17');
 
 The C<new> method will return a date object if the values passed in
-specify a valid date.  If an invalid date is passed, the method
-returns undef.  If the argument is invalid in form as opposed to
-numeric range, C<new> dies.
+specify a valid date.  (See above.)  If an invalid date is passed, the
+method returns undef.  If the argument is invalid in form as opposed
+to numeric range, C<new> dies.
 
 The C<date> function provides the same functionality but must be
 imported or qualified as C<Date::Simple::date>.  (To import all public
@@ -384,7 +406,11 @@ You can subtract two dates to find the number of days between them.
 =item etc.
 
 You can compare two dates using the arithmetic or string comparison
-operators.
+operators.  Equality tests (C<==> and C<eq>) return false when one of
+the expressions can not be converted to a date.  Other comparison
+tests die in such cases.  This is intentional, because in a sense, all
+non-dates are not "equal" to all dates, but in no sense are they
+"greater" or "less" than dates.
 
 =item DATE += NUMBER
 
@@ -423,7 +449,7 @@ Returns the number of days in MONTH, YEAR.
 =head1 COPYRIGHT
 
       Copyright (C) 2001  Kasei
-      Copyright (C) 2001 John Tobey.
+      Copyright (C) 2001,2002 John Tobey.
 
       This program is free software; you can redistribute it and/or
       modify it under the terms of either:

@@ -174,6 +174,15 @@ sub _compare {
     return ($reverse ? $$right <=> $$left : $$left <=> $$right);
 }
 
+sub _eq {
+    my ($left, $right) = @_;
+    return (($right = $left->_new($right)) && $$right == $$left);
+}
+
+sub _ne {
+    return (!&_eq);
+}
+
 1;
 
 =head1 NAME

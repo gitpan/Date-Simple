@@ -163,6 +163,41 @@ days_to_date (IV days, const char* pkg)
 			 gv_stashpv (pkg == 0 ? "Date::Simple" : pkg, 1));
 }
 
+static int
+is_object (SV* sv)
+{
+	return (SvROK (sv) && SvTYPE (SvRV (sv)) == SVt_PVMG);
+}
+
+static SV*
+new_for_cmp (SV* left, SV* right, int croak_on_fail)
+{
+	dSP;
+	SV* ret;
+
+	/* Comparing date with non-date.
+	   Try to convert the right side to a date.  */
+	EXTEND (sp, 2);
+	PUSHMARK(sp);
+	PUSHs (left);
+	PUSHs (right);
+	PUTBACK;
+	perl_call_method (croak_on_fail ? "new" : "_new", G_SCALAR);
+	SPAGAIN;
+	ret = POPs;
+	if (croak_on_fail && ! is_object (ret))
+	{
+		PUSHMARK(sp);
+		PUSHs (left);
+		PUSHs (right);
+		PUTBACK;
+		perl_call_pv ("Date::Simple::_inval", G_VOID);
+		SPAGAIN;
+	}
+	return ret;
+}
+
+
 
 MODULE = Date::Simple	PACKAGE = Date::Simple
 
@@ -382,10 +417,7 @@ _add(date, diff, ...)
 	{
 		IV days;
 
-		if (! SvROK (date))
-			XSRETURN_UNDEF;
-
-		if (SvTYPE (SvRV (date)) != SVt_PVMG)
+		if (! is_object (date))
 			XSRETURN_UNDEF;
 
 		days = SvIV (SvRV (date)) + diff;
@@ -402,10 +434,7 @@ _subtract(left, right, reverse)
 	SV* reverse
 	CODE:
 	{
-		if (! SvROK (left))
-			XSRETURN_UNDEF;
-
-		if (SvTYPE (SvRV (left)) != SVt_PVMG)
+		if (! is_object (left))
 			XSRETURN_UNDEF;
 
 		if (SvTRUE (reverse))
@@ -435,43 +464,65 @@ _compare(left, right, reverse)
 	{
 		IV diff;
 
-		if (! SvROK (left))
+		if (! is_object (left))
 			XSRETURN_UNDEF;
 
-		if (SvTYPE (SvRV (left)) != SVt_PVMG)
-			XSRETURN_UNDEF;
-
-		if (! (SvROK (right) && SvTYPE (SvRV (right)) == SVt_PVMG))
-		{
-			SV* tmp;
-
-			/* Comparing date with non-date.
-			   Try to convert the right side to a date.  */
-			EXTEND (sp, 2);
-			PUSHMARK(sp);
-			PUSHs (left);
-			PUSHs (right);
-			PUTBACK;
-			perl_call_method ("new", G_SCALAR);
-			SPAGAIN;
-			tmp = POPs;
-			if (! SvROK (tmp) && SvTYPE (SvRV (tmp)) == SVt_PVMG)
-			{
-				PUSHMARK(sp);
-				PUSHs (left);
-				PUSHs (right);
-				PUTBACK;
-				perl_call_pv ("Date::Simple::_inval", G_VOID);
-				SPAGAIN;
-			}
-			right = tmp;
-		}
+		if (! is_object (right))
+			right = new_for_cmp (left, right, 1);
 
 		diff = SvIV (SvRV (left)) - SvIV (SvRV (right));
-		if (reverse)
-			diff = -diff;
-
 		RETVAL = diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+
+		if (reverse)
+			RETVAL = -RETVAL;
+	}
+	OUTPUT:
+	RETVAL
+
+SV*
+_eq(left, right, reverse)
+	SV* left
+	SV* right
+	bool reverse
+	CODE:
+	{
+		if (! is_object (left))
+			XSRETURN_UNDEF;
+
+		if (! is_object (right))
+			right = new_for_cmp (left, right, 0);
+
+		if (! is_object (right))
+			XSRETURN_NO;
+
+		if (SvIV (SvRV (left)) == SvIV (SvRV (right)))
+			XSRETURN_YES;
+		else
+			XSRETURN_NO;
+	}
+	OUTPUT:
+	RETVAL
+
+SV*
+_ne(left, right, reverse)
+	SV* left
+	SV* right
+	bool reverse
+	CODE:
+	{
+		if (! is_object (left))
+			XSRETURN_UNDEF;
+
+		if (! is_object (right))
+			right = new_for_cmp (left, right, 0);
+
+		if (! is_object (right))
+			XSRETURN_YES;
+
+		if (SvIV (SvRV (left)) == SvIV (SvRV (right)))
+			XSRETURN_NO;
+		else
+			XSRETURN_YES;
 	}
 	OUTPUT:
 	RETVAL
