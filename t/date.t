@@ -93,7 +93,8 @@ ok($d->month, 1);
 ok($d->day, 17);
 
 ok($d->format, '1972-01-17');
-ok($d->format('%d %b %Y'), '17 Jan 1972');
+# Don't assume much about how this locale spells 'Jan'.
+ok($d->format('%d %b %Y') =~ m/17 \D+ 1972/);
 ok($d->format('Foo'), 'Foo');
 
 use Date::Simple ('date', 'd8');

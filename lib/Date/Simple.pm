@@ -2,7 +2,7 @@
 
 package Date::Simple;
 
-$VERSION = '2.02';
+$VERSION = '2.03';
 use Exporter ();
 @ISA = ('Exporter');
 @EXPORT_OK = ('today', 'ymd', 'd8', 'date', 'leap_year', 'days_in_month');

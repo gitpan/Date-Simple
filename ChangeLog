@@ -1,3 +1,10 @@
+2002-03-11  John Tobey  <jtobey@john-edwin-tobey.org>
+
+	* lib/Date/Simple.pm ($VERSION): Version 2.03.
+
+	* t/date.t: Remove a locale dependency.  Thanks to ASSAD Arnaud
+	for the fix.
+
 2001-10-02  John Tobey  <jtobey@john-edwin-tobey.org>
 
 	* lib/Date/Simple.pm ($VERSION): Version 2.02.
