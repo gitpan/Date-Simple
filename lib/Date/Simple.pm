@@ -2,7 +2,7 @@
 
 package Date::Simple;
 BEGIN {
-   $VERSION = '3.02';
+   $VERSION = '3.03_01';
 }
 use Exporter ();
 @ISA = ('Exporter');

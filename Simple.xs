@@ -381,8 +381,8 @@ as_iso(date, ...)
 			XSRETURN_UNDEF;
 
 		days_to_ymd (SvIV (SvRV (date)), ymd);
-		RETVAL = newSVpvf ("%04d-%02d-%02d", ymd[0] % 10000,
-				   ymd[1], ymd[2]);
+		RETVAL = newSVpvf ("%04d-%02d-%02d", (int) ymd[0] % 10000,
+				   (int) ymd[1], (int) ymd[2]);
 	}
 	OUTPUT:
 	RETVAL
@@ -398,8 +398,8 @@ as_d8(date, ...)
 			XSRETURN_UNDEF;
 
 		days_to_ymd (SvIV (SvRV (date)), ymd);
-		RETVAL = newSVpvf ("%04d%02d%02d", ymd[0] % 10000,
-				   ymd[1], ymd[2]);
+		RETVAL = newSVpvf ("%04d%02d%02d", (int)ymd[0] % 10000,
+				   (int) ymd[1], (int) ymd[2]);
 	}
 	OUTPUT:
 	RETVAL

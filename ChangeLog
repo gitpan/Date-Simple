@@ -1,3 +1,7 @@
+2008-01-09  Igor Sutton <igor.sutton@yahoo.co.uk>
+
+	* Applied patch proposed for 64bit support (bug #28549).
+
 2004-12-18  Yves Orton <demerphq@hotmail.com>
 
         * YO --  Version number kick to 3.02, doc fix. Patch merge.
