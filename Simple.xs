@@ -426,17 +426,43 @@ _add(date, diff, ...)
 	IV diff
 	CODE:
 	{
+	        dSP;
+
+	        SV* new_date;
+		SV* format;
+
 		IV days;
 
 		if (! is_object (date))
 			XSRETURN_UNDEF;
 
 		days = SvIV (SvRV (date)) + diff;
-		RETVAL = sv_bless (newRV_noinc (newSViv (days)),
-				   SvSTASH (SvRV (date)));
+
+		new_date = sv_bless(newRV_noinc(newSViv(days)),
+				    SvSTASH(SvRV(date)));
+
+		PUSHMARK(SP);
+		XPUSHs(date);
+		PUTBACK;
+
+		call_method("default_format", G_SCALAR);
+
+		SPAGAIN;
+
+		format = POPs;
+
+		PUSHMARK(SP);
+		XPUSHs(new_date);
+		XPUSHs(format);
+		PUTBACK;
+
+		call_method("default_format", G_DISCARD);
+
+		RETVAL = new_date;
+
 	}
 	OUTPUT:
-	RETVAL
+                RETVAL
 
 SV*
 _subtract(left, right, reverse)
@@ -459,8 +485,30 @@ _subtract(left, right, reverse)
 		else
 		{
 			IV days = SvIV (SvRV (left)) - SvIV (right);
-			RETVAL = sv_bless (newRV_noinc (newSViv (days)),
-					   SvSTASH (SvRV (left)));
+			SV* new_date = sv_bless (newRV_noinc (newSViv (days)),
+						 SvSTASH (SvRV (left)));
+			SV* format;
+
+			dSP;
+
+			PUSHMARK(SP);
+			XPUSHs(left);
+			PUTBACK;
+
+			call_method("default_format", G_SCALAR);
+
+			SPAGAIN;
+
+			format = POPs;
+
+			PUSHMARK(SP);
+			XPUSHs(new_date);
+			XPUSHs(format);
+			PUTBACK;
+
+			call_method("default_format", G_DISCARD);
+
+			RETVAL = new_date;
 		}
 	}
 	OUTPUT:

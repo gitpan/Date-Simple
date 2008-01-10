@@ -154,17 +154,23 @@ sub _add {
     if ($diff !~ /^-?\d+$/) {
 	Carp::croak ("Date interval must be an integer");
     }
-    return (bless (\ ($$date + $diff), ref($date)));
+    my $new_date = bless (\ ($$date + $diff), ref($date));
+    $new_date->default_format($date->default_format);
+    return $new_date;
 }
 
 sub _subtract {
     my ($left, $right, $reverse) = @_;
 
+    my $new_date;
+
     if ($reverse) {
 	Carp::croak ("Can't subtract a date from a non-date");
     }
     if (ref($right) eq '' && $right =~ /^-?\d+$/) {
-	return (bless (\ ($$left - $right), ref($left)));
+    $new_date = bless (\ ($$left - $right), ref($left));
+    $new_date->default_format($left->default_format);
+    return $new_date;
     }
     return ($$left - $$right);
 }
