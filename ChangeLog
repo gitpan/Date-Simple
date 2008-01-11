@@ -1,3 +1,8 @@
+2008-01-12  Igor Sutton <igor.sutton@yahoo.co.uk>
+
+	* Subclassing should now work with today, ymd and d8
+	constructors (bug #32250).
+	
 2008-01-10  Igor Sutton <igor.sutton@yahoo.co.uk>
 
 	* Copy default_format from old Date::Simple object when adding or
