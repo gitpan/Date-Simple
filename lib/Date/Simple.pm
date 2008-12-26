@@ -3,7 +3,7 @@
 package Date::Simple;
 
 BEGIN {
-    $VERSION = '3.03_03';
+    $VERSION = '3.03';
 }
 
 use Exporter ();
